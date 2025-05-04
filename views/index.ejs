@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UUID Encryption</title>
+
+  <style>
+    /* General Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Body Styling */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    /* Title Styling */
+    h2 {
+      color: #4CAF50;
+      margin-bottom: 30px;
+    }
+
+    /* Button Styling */
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Input Styling */
+    input[type="number"] {
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 150px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    /* Form Styling */
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Status Text Styling */
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    /* Result Text Styling */
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    /* Error Message Styling */
+    .error {
+      color: red;
+      font-size: 14px;
+    }
+
+    /* Container Styling */
+    .container {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>UUID Encryption</h2>
+    <button onclick="generateKey()">Generate Key</button><br><br>
+
+    <form id="encryptForm">
+      <input type="number" id="num" step="0.01" min="0.01" max="99.99" required>
+      <button type="submit">Submit</button>
+    </form>
+
+    <p id="status"></p>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let uuid = null;
+    let publicKey = null;
+
+    // Function to generate UUID and public key
+    async function generateKey() {
+      const res = await fetch('/api/encryption/generate');
+      const data = await res.json();
+      uuid = data.uuid;
+      publicKey = data.publicKey;
+      document.getElementById('status').innerText = 'Key generated. UUID: ' + uuid;
+    }
+
+    // Form submission for encryption
+    document.getElementById('encryptForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const num = parseFloat(document.getElementById('num').value);
+
+      if (!uuid || !publicKey || isNaN(num) || num < 0.01 || num > 99.99) {
+        alert('Generate key and enter a valid number (0.01 - 99.99)');
+        return;
+      }
+
+      const response = await fetch('/api/encryption/encrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uuid, publicKey, number: num })
+      });
+
+      const result = await response.json();
+      document.getElementById('status').innerText = result.message;
+
+      if (result.sorted) {
+        document.getElementById('result').innerText = 'Sorted Unique Values: ' + result.sorted.join(', ');
+      }
+    });
+  </script>
+</body>
+</html>
